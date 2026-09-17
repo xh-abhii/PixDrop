@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PixDrop</title>
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="style.css">
+    <!-- QRious Library for QR codes -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <!-- Tailwind Config for precise coloring -->
+    <script>
+        tailwind.config = {
+            safelist: [
+                'border-orange-500',
+                'bg-orange-50',
+                'text-orange-700',
+                'border-transparent',
+                'bg-slate-100',
+                'text-slate-700'
+            ],
+            theme: {
+                extend: {
+                    colors: {
+                        orange: {
+                            50: '#fff7ed',
+                            100: '#ffedd5',
+                            500: '#f97316',
+                            600: '#ea580c',
+                            700: '#c2410c',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans min-h-screen pb-16">
+    <!-- Decorative Warm Line -->
+    <div class="h-1.5 bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 w-full"></div>
+
+    <main class="max-w-3xl mx-auto px-4 pt-10 sm:pt-14">
+        <!-- Header -->
+        <div class="flex flex-col items-center text-center mb-10">
+            <div class="inline-flex items-center gap-2 bg-orange-50 text-orange-700 px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider mb-4 border border-orange-100">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> PixDrop
+            </div>
+            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-950 mb-3">
+                PixDrop
+            </h1>
+            <p class="text-slate-600 text-sm max-w-lg leading-relaxed">
+                Drag, preview, and instantly upload high-resolution images or videos to retrieve
+                clean, direct media links perfectly suited for embeds or your website.
+            </p>
+        </div>
+
+        <!-- Type Tabs -->
+        <div class="flex justify-center mb-6">
+            <div class="bg-white border border-slate-200 p-1 rounded-xl inline-flex relative shadow-sm">
+                <button type="button" id="tab-image" class="px-6 py-2 rounded-lg text-sm font-semibold transition-all bg-slate-100 text-slate-900 flex items-center gap-2">
+                    <i data-lucide="image" class="w-4 h-4"></i> Image Upload
+                </button>
+                <button type="button" id="tab-video" class="px-6 py-2 rounded-lg text-sm font-semibold transition-all text-slate-500 hover:text-slate-700 flex items-center gap-2">
+                    <i data-lucide="video" class="w-4 h-4"></i> Video Upload
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden max-w-xl mx-auto">
+            
+            <!-- Upload Area Stage -->
+            <div id="upload-stage" class="p-6">
+                <!-- Drop Zone -->
+                <div id="drop-zone" class="relative border-2 border-dashed border-slate-300 rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200 hover:border-orange-400 hover:bg-slate-50">
+                    <input type="file" id="file-input" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                    
+                    <!-- Unselected State -->
+                    <div id="unselected-state" class="flex flex-col items-center pointer-events-none">
+                        <div class="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 mb-4 transition-all">
+                            <i data-lucide="upload-cloud" class="w-6 h-6"></i>
+                        </div>
+                        <span id="upload-type-text" class="text-sm font-semibold text-slate-800">Drag & Drop your image here</span>
+                        <span class="text-xs text-slate-400 mt-1">or click to explore files from your computing device</span>
+                    </div>
+
+                    <!-- Selected State -->
+                    <div id="selected-state" class="hidden w-full flex-col items-center relative z-20">
+                        <div class="relative group max-w-xs overflow-hidden rounded-lg border border-slate-200 shadow-sm mb-4">
+                            <img id="preview-img" class="max-h-48 w-auto object-contain bg-slate-50" />
+                            <video id="preview-vid" class="max-h-48 w-auto object-contain bg-slate-50 hidden" controls></video>
+                            <button type="button" id="remove-btn" class="absolute top-1.5 right-1.5 bg-slate-900/80 hover:bg-slate-950 text-white rounded-full p-1.5 shadow-sm transition-all text-xs z-20" title="Remove file">
+                                <i data-lucide="x" class="w-3.5 h-3.5 text-white"></i>
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full font-mono max-w-full">
+                            <i data-lucide="file" id="file-icon" class="w-3.5 h-3.5 flex-shrink-0"></i>
+                            <span id="file-name-display" class="truncate max-w-[140px] sm:max-w-xs"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Error Message -->
+                <div id="error-message" class="hidden mt-4 items-start gap-2 bg-red-50 border border-red-100 p-3.5 rounded-xl text-red-800 text-xs">
+                    <i data-lucide="alert-triangle" class="w-4.5 h-4.5 text-red-600 mt-0.5 flex-shrink-0"></i>
+                    <div id="error-text"></div>
+                </div>
+
+                <!-- Upload Button -->
+                <div id="upload-btn-container" class="hidden mt-5">
+                    <div id="optimization-container" class="mb-4 flex items-start gap-2 hidden">
+                        <input type="checkbox" id="optimize-checkbox" checked class="mt-0.5 w-4 h-4 text-orange-600 rounded border-slate-300 focus:ring-orange-500 accent-orange-600 cursor-pointer">
+                        <label for="optimize-checkbox" class="text-xs font-medium text-slate-700 cursor-pointer select-none">
+                            Optimize image for web (Resize to max 1920px & convert to WebP)
+                        </label>
+                    </div>
+                    <button type="button" id="upload-btn" class="relative w-full overflow-hidden flex items-center justify-center bg-orange-600 hover:bg-orange-700 text-white font-medium text-sm py-3 px-4 rounded-xl transition-all shadow-sm">
+                        <!-- Progress Bar Fill -->
+                        <div id="upload-progress-bar" class="absolute top-0 left-0 bottom-0 bg-orange-500 w-0 transition-all duration-150 z-0"></div>
+                        
+                        <!-- Button Content -->
+                        <div class="relative z-10 flex items-center gap-2">
+                            <i data-lucide="upload-cloud" class="w-4 h-4" id="upload-icon"></i>
+                            <i data-lucide="loader-2" class="w-4 h-4 animate-spin hidden" id="upload-spinner"></i>
+                            <span id="upload-btn-text">Upload and Get Public Direct Link</span>
+                            <span id="upload-progress-text" class="hidden text-xs font-bold bg-white/20 px-2 py-0.5 rounded-md ml-1">0%</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Success State Stage -->
+            <div id="success-stage" class="hidden p-6">
+                <!-- Success Header -->
+                <div class="flex flex-col items-center text-center pb-5 mb-5 border-b border-slate-100">
+                    <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-3">
+                        <i data-lucide="check-circle" class="w-6 h-6"></i>
+                    </div>
+                    <h3 id="success-header" class="text-lg font-bold text-slate-900">Image Asset Uploaded Successfully!</h3>
+                    <p class="text-xs text-slate-500 mt-1">Stored securely on Cloudinary.</p>
+                </div>
+
+                <!-- Generated Image Output -->
+                <div class="flex justify-center mb-6">
+                    <div class="relative max-w-xs overflow-hidden rounded-xl border border-slate-100 shadow-sm bg-slate-50 p-1">
+                        <img id="result-img" class="max-h-52 w-auto object-contain rounded-lg" />
+                        <video id="result-vid" class="max-h-52 w-auto object-contain rounded-lg hidden" controls></video>
+                    </div>
+                </div>
+
+                <!-- Link Copy Interface -->
+                <div class="mb-5">
+                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Direct Embed Link</label>
+                    <div class="flex items-stretch shadow-sm rounded-xl overflow-hidden border border-slate-200">
+                        <input id="result-url" type="text" readonly class="flex-1 w-full bg-slate-50 text-slate-800 text-xs font-mono py-3 px-4 select-all focus:outline-none" />
+                        <button id="copy-btn" class="px-5 text-xs font-medium flex items-center gap-1.5 transition-all bg-slate-100 text-slate-700 hover:bg-slate-200 border-l border-slate-200 outline-none">
+                            <i data-lucide="copy" class="w-3.5 h-3.5" id="copy-icon"></i>
+                            <span id="copy-text">Copy URL</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- QR Code Block -->
+                <div class="mb-5 border-t border-slate-100 pt-5 flex flex-col items-center">
+                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Scan & Share</label>
+                    <div class="p-2 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                        <canvas id="qr-canvas"></canvas>
+                    </div>
+                    <div class="flex gap-2 mt-3">
+                        <button id="download-qr-btn" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-1.5 px-3 rounded-lg flex items-center gap-1.5 transition-all">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i> Download
+                        </button>
+                        <button id="print-qr-btn" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-1.5 px-3 rounded-lg flex items-center gap-1.5 transition-all">
+                            <i data-lucide="printer" class="w-3.5 h-3.5"></i> Print
+                        </button>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-3 text-center max-w-xs">Use your phone's camera to easily open this media or print it for your physical menu.</p>
+                </div>
+
+                <!-- Action Controls -->
+                <div class="flex gap-3 mt-4">
+                    <button id="reset-btn" class="flex-1 text-center bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-sm py-3 px-4 rounded-xl transition-all">
+                        Upload Another File
+                    </button>
+                    <a id="verify-link" href="#" target="_blank" class="flex-1 flex justify-center items-center gap-1.5 bg-orange-50 border border-orange-200 hover:bg-orange-100 text-orange-700 font-medium text-sm py-3 px-4 rounded-xl transition-all">
+                        Verify Element <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Session History Section -->
+    <div id="history-section" class="mt-8 mb-8 bg-white border border-slate-200 rounded-2xl shadow-sm p-6 max-w-3xl mx-auto hidden">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <i data-lucide="history" class="w-5 h-5 text-indigo-500"></i> Session History
+            </h3>
+            <button type="button" id="download-csv-btn" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium text-xs py-2 px-3 rounded-lg transition-all flex items-center gap-1.5">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Download CSV
+            </button>
+        </div>
+        <div class="overflow-x-auto rounded-xl border border-slate-100">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-slate-50 text-slate-600 text-xs uppercase font-semibold">
+                    <tr>
+                        <th class="px-4 py-3 border-b border-slate-100 rounded-tl-xl">File Name</th>
+                        <th class="px-4 py-3 border-b border-slate-100">URL</th>
+                    </tr>
+                </thead>
+                <tbody id="history-table-body" class="divide-y divide-slate-100 text-slate-700">
+                    <!-- History rows will be dynamically injected here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Support Section -->
+    <div class="mt-8 mb-8 bg-white border border-slate-200 rounded-2xl shadow-sm p-6 max-w-xl mx-auto text-center">
+        <h3 class="text-lg font-bold text-slate-900 mb-2 flex justify-center items-center gap-2">
+            <i data-lucide="coffee" class="w-5 h-5 text-orange-500"></i> Buy a meal for me
+        </h3>
+        <p class="text-xs text-slate-500 mb-5">If you find this tool useful, consider supporting its development!</p>
+        
+        <div class="flex flex-wrap justify-center gap-3 mb-4">
+            <button type="button" class="amount-btn flex-1 min-w-[70px] bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 rounded-xl border-2 border-transparent transition-all" data-amount="99">₹99</button>
+            <button type="button" class="amount-btn flex-1 min-w-[70px] bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 rounded-xl border-2 border-transparent transition-all" data-amount="199">₹199</button>
+            <button type="button" class="amount-btn flex-1 min-w-[70px] bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 rounded-xl border-2 border-transparent transition-all" data-amount="299">₹299</button>
+            <button type="button" id="custom-amount-btn" class="flex-1 min-w-[70px] bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 rounded-xl border-2 border-transparent transition-all">Custom</button>
+        </div>
+
+        <div id="custom-amount-container" class="hidden mb-4 max-w-xs mx-auto">
+            <div class="relative">
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-medium">₹</span>
+                <input type="number" id="custom-amount-input" min="1" placeholder="Enter amount" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm py-2.5 pl-8 pr-4 rounded-xl focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400">
+            </div>
+        </div>
+
+        <button type="button" id="support-continue-btn" class="w-full sm:w-auto px-8 bg-orange-600 hover:bg-orange-700 text-white font-medium text-sm py-3 rounded-xl transition-all shadow-sm hidden mx-auto">
+            Continue to Pay
+        </button>
+
+        <!-- UPI QR Code Display -->
+        <div id="upi-qr-container" class="hidden mt-5 pt-5 border-t border-slate-100 flex-col items-center">
+            <p class="text-xs font-semibold text-slate-700 mb-3">Scan with any UPI App</p>
+            <div class="p-2 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                <canvas id="upi-qr-canvas"></canvas>
+            </div>
+            <a id="upi-deep-link" href="#" class="mt-4 text-xs font-medium bg-orange-50 text-orange-600 hover:bg-orange-100 py-2 px-4 rounded-lg flex items-center justify-center gap-1.5 transition-all">
+                Open in UPI App <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+            </a>
+            <p class="text-[10px] text-slate-400 mt-3 max-w-[200px] mx-auto text-center">UPI ID: abhishek8324@fam</p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="max-w-3xl mx-auto px-4 mt-16 pb-8 border-t border-slate-200/60 pt-8">
+        <div class="flex flex-col items-center justify-center gap-4">
+            <p class="text-sm text-slate-500 font-medium flex items-center justify-center">
+                Built by <span class="text-slate-800 font-semibold ml-1">Abhishek Kumar</span>
+            </p>
+            <div class="flex items-center gap-5">
+                <a href="https://github.com/debuggingmylifee" target="_blank" rel="noopener noreferrer" class="text-slate-400 hover:text-slate-800 transition-colors" title="GitHub">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.26c3.1-.3 6.3-1.4 6.3-6.9a5.05 5.05 0 0 0-1.4-3.5 4.67 4.67 0 0 0 .1-3.2s-1.1-.3-3.5 1.3a11.5 11.5 0 0 0-6 0C6.2 2.7 5.1 3 5.1 3a4.67 4.67 0 0 0 .1 3.2A5.05 5.05 0 0 0 3 9.74c0 5.46 3.2 6.6 6.3 6.9A4.8 4.8 0 0 0 8 19.9v4.1"/><path d="M12 22v-4"/></svg>
+                </a>
+                <a href="https://www.linkedin.com/in/abhishek-kumar-23a1a6417/" target="_blank" rel="noopener noreferrer" class="text-slate-400 hover:text-blue-600 transition-colors" title="LinkedIn">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
+                </a>
+                <a href="https://www.instagram.com/debugmylifee?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer" class="text-slate-400 hover:text-pink-600 transition-colors" title="Instagram">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Load Application Logic -->
+    <script src="script.js?v=6"></script>
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>
+

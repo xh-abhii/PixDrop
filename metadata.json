@@ -1,0 +1,6 @@
+{
+  "name": "Image Link Uploader",
+  "description": "Upload any image and instantly copy its direct, shareable URL for menus or embeds.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
