@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", () => {
+function initApp() {
     // ---- Configuration Settings ----
     // Your Cloudinary secure credentials for instant unsigned uploads. 
     // Secure client-side hashing keeps this self-contained. 
@@ -676,4 +676,10 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener("DOMContentLoaded", initApp);
+} else {
+    initApp();
+}
